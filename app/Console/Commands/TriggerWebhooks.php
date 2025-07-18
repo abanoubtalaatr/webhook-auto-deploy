@@ -54,6 +54,8 @@ class TriggerWebhooks extends Command
                     ]);
                 } else {
                     $this->error("Failed to trigger webhook: {$webhook['url']}");
+                    $this->error("Status: {$response->status()}");
+                    $this->error("Response: {$response->body()}");
                     Log::error('Webhook trigger failed', [
                         'url' => $webhook['url'],
                         'status' => $response->status(),
@@ -62,6 +64,7 @@ class TriggerWebhooks extends Command
                 }
             } catch (\Exception $e) {
                 $this->error("Error triggering webhook: {$webhook['url']}");
+                $this->error("Error: {$e->getMessage()}");
                 Log::error('Webhook trigger error', [
                     'url' => $webhook['url'],
                     'error' => $e->getMessage(),

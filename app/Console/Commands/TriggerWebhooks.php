@@ -19,10 +19,7 @@ class TriggerWebhooks extends Command
                 'url' => 'https://auto-deploy.digital-vision-solutions.com/api/webhook-handler',
                 'secret' => 'YourSecretToken1',
             ],
-            [
-                'url' => 'https://another-site.com/webhook-handler',
-                'secret' => 'YourSecretToken2',
-            ],
+            
             // Add more webhook URLs and secrets as needed
         ];
 

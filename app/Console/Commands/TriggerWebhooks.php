@@ -39,12 +39,7 @@ class TriggerWebhooks extends Command
                 $signature = 'sha256=' . hash_hmac('sha256', json_encode($payload), $webhook['secret']);
 
                 // Send POST request
-                $response = Http::withHeaders([
-                    'X-Hub-Signature-256' => $signature,
-                    'X-GitHub-Event' => 'push',
-                    'Content-Type' => 'application/json',
-                    'Accept' => 'application/json',
-                ])->post($webhook['url'], $payload);
+                $response = Http::get($webhook['url'], $payload);
 
                 if ($response->successful()) {
                     $this->info("✅ Successfully triggered webhook: {$webhook['url']}");

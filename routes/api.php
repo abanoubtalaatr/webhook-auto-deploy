@@ -82,13 +82,16 @@ Route::post('/webhook-handler', function (Request $request) {
         // Run the deploy script
         $process = new Process(['/bin/bash', $deployScript]);
         $process->setTimeout(300); // 5 minutes timeout
-        $process->run();
+        
+        // Run the process and wait for completion
+        $exitCode = $process->run();
 
-        if ($process->isSuccessful()) {
+        if ($exitCode === 0) {
             $output = $process->getOutput();
             Log::info('Deployment completed successfully', [
                 'output' => $output,
-                'script' => $deployScript
+                'script' => $deployScript,
+                'exit_code' => $exitCode
             ]);
             
             return response()->json([
@@ -98,18 +101,20 @@ Route::post('/webhook-handler', function (Request $request) {
             ], 200, $headers);
         } else {
             $error = $process->getErrorOutput();
+            $output = $process->getOutput();
             Log::error('Deployment failed', [
                 'error' => $error,
-                'output' => $process->getOutput(),
-                'exit_code' => $process->getExitCode(),
+                'output' => $output,
+                'exit_code' => $exitCode,
                 'script' => $deployScript
             ]);
             
             return response()->json([
                 'success' => false,
-                'message' => 'Deployment failed: ' . $error,
-                'output' => $process->getOutput(),
-                'exit_code' => $process->getExitCode()
+                'message' => 'Deployment failed with exit code ' . $exitCode,
+                'error' => $error,
+                'output' => $output,
+                'exit_code' => $exitCode
             ], 500, $headers);
         }
     } catch (ProcessFailedException $exception) {

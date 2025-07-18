@@ -43,19 +43,40 @@ class TriggerWebhooks extends Command
                     'X-Hub-Signature-256' => $signature,
                     'X-GitHub-Event' => 'push',
                     'Content-Type' => 'application/json',
+                    'Accept' => 'application/json',
                 ])->post($webhook['url'], $payload);
 
                 if ($response->successful()) {
-                    $this->info("Successfully triggered webhook: {$webhook['url']}");
+                    $this->info("✅ Successfully triggered webhook: {$webhook['url']}");
+                    
+                    // Try to parse JSON response
+                    $responseData = $response->json();
+                    if ($responseData && isset($responseData['message'])) {
+                        $this->line("   Response: {$responseData['message']}");
+                    }
+                    
                     Log::info('Webhook triggered successfully', [
                         'url' => $webhook['url'],
                         'status' => $response->status(),
                         'response' => $response->body(),
                     ]);
                 } else {
-                    $this->error("Failed to trigger webhook: {$webhook['url']}");
-                    $this->error("Status: {$response->status()}");
-                    $this->error("Response: {$response->body()}");
+                    $this->error("❌ Failed to trigger webhook: {$webhook['url']}");
+                    $this->error("   Status: {$response->status()}");
+                    
+                    // Try to parse JSON error response
+                    $responseData = $response->json();
+                    if ($responseData && isset($responseData['message'])) {
+                        $this->error("   Error: {$responseData['message']}");
+                    } else {
+                        // Fallback to raw response, but truncate if too long
+                        $rawResponse = $response->body();
+                        if (strlen($rawResponse) > 200) {
+                            $rawResponse = substr($rawResponse, 0, 200) . '...';
+                        }
+                        $this->error("   Response: {$rawResponse}");
+                    }
+                    
                     Log::error('Webhook trigger failed', [
                         'url' => $webhook['url'],
                         'status' => $response->status(),
